@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA</title>
+</head>
+<body>
+    <h1>Assistente - Loja de Aluguéis</h1>
+    <input id="pergunta" type="text" placeholder="ex: Quantos carros na cor preta estão disponíveis?" style="width: 80%;">
+    <button id="btn">Perguntar</button>
+
+    <div id="status"></div>
+    <div class="resposta" id="resposta"></div>
+
+    <script>
+        document.getElementById("btn").addEventListener("click", fazerPergunta);
+
+        async function fazerPergunta() {
+            const pergunta = document.getElementById("pergunta").value.trim();
+            if(!pergunta){alert("Digite uma pergunta"); return;}
+
+            document.getElementById("status").textContent = "Processando...";
+            document.getElementById("resposta").textContent = '';
+
+            try {
+                const res = await fetch("http://localhost:8080/chatbot", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pergunta })
+                });
+                const data = await res.json();
+
+                document.getElementById("status").textContent = `Intenção: ${data.intencao}`;
+
+                if (Array.isArray(data.dados)) {
+                    renderTabela(data.dados);
+                } else if (data.dados && typeof data.dados.count !== 'undefined') {
+                    document.getElementById("resposta").textContent = data.mensagemPadrao.replace('{count}', data.dados.count);
+                } else {
+                    document.getElementById("resposta").textContent = data.mensagemPadrao || JSON.stringify(data.dados, null, 2);
+                }
+
+            } catch(err) {
+                console.error(err);
+                document.getElementById("status").textContent = "Erro ao conectar.";
+                document.getElementById("resposta").textContent = err.message;
+            }
+        }
+
+        function renderTabela(arr){
+            if(!arr.length){
+                document.getElementById("resposta").textContent = "Nenhum registro encontrado.";
+                return;
+            }
+            const cols = Object.keys(arr[0]);
+            let html = '<table border="1"><thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+            for(const row of arr){
+                html += '<tr>' + cols.map(c => `<td>${row[c] ?? ''}</td>`).join('') + '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('resposta').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
