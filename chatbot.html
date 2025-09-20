@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA</title>
+</head>
+<body>
+    <h1>Assistente - Loja de Revenda de Automóveis</h1>
+    <input id="pergunta" type="text" placeholder="ex: Quais veículos existem?" style="width: 80%;">
+    <button id="btn">Perguntar</button>
+
+    <div id="status"></div>
+    <div class="resposta" id="resposta"></div>
+
+    <script>
+        document.getElementById("btn").addEventListener("click", fazerPergunta);
+
+        async function fazerPergunta() {
+            const pergunta = document.getElementById("pergunta").value.trim();
+            if(!pergunta){alert("Digite uma pergunta"); return;}
+
+            document.getElementById("status").textContent = "Processando...";
+            document.getElementById("resposta").textContent = '';
+
+            try {
+                 const res = await fetch(`http://localhost:8080/chatbot?mensagem=${encodeURIComponent(pergunta)}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+
+                switch (data.intencao) {
+                    case "LISTAR_MARCAS": {
+                        const res = await fetch(`http://localhost:8080/marca`, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const marcas = await res.json();
+                        console.log(marcas);
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "";
+
+                        marcas.forEach(marca => {
+                            const p = document.createElement("p");
+                            p.textContent = `${marca.id} - ${marca.nome}`;
+                            statusEl.appendChild(p);
+                        });
+                        break;
+                    }
+
+                    case "CRIAR_MARCA": {
+                        console.log(data.dados);
+                        const res = await fetch("http://localhost:8080/marca/cadastrar", {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data.dados)
+                        });
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "Marca cadastrada com sucesso!";
+                        break;
+                    }
+
+                    case "LISTAR_MODELOS": {
+                        const res = await fetch(`http://localhost:8080/modelo`, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const modelos = await res.json();
+                        console.log(modelos);
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "";
+
+                        modelos.forEach(modelo => {
+                            const p = document.createElement("p");
+                            p.textContent = `${modelo.id} - ${modelo.nome} - ${modelo.marca?.nome ?? ""}`;
+                            statusEl.appendChild(p);
+                        });
+                        break;
+                    }
+
+                    case "CRIAR_MODELO": {
+                        console.log(data.dados);
+                        const res = await fetch("http://localhost:8080/modelo/cadastrar", {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data.dados)
+                        });
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "Modelo cadastrado com sucesso!";
+                        break;
+                    }
+
+                    case "LISTAR_TIPOS_VEICULO": {
+                        const res = await fetch(`http://localhost:8080/tipo-veiculo`, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const tipos = await res.json();
+                        console.log(tipos);
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "";
+
+                        tipos.forEach(tipo => {
+                            const p = document.createElement("p");
+                            p.textContent = `${tipo.id} - ${tipo.nome}`;
+                            statusEl.appendChild(p);
+                        });
+                        break;
+                    }
+                    case "CRIAR_TIPO_VEICULO": {
+                        console.log(data.dados);
+                        const res = await fetch("http://localhost:8080/tipo-veiculo/cadastrar", {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data.dados)
+                        });
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "Tipo de veículo cadastrado com sucesso!";
+                        break;
+                    }
+
+                    case "LISTAR_CORES": {
+                        const res = await fetch(`http://localhost:8080/cor`, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const cores = await res.json();
+                        console.log(cores);
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "";
+
+                        cores.forEach(cor => {
+                            const p = document.createElement("p");
+                            p.textContent = `${cor.id} - ${cor.nome}`;
+                            statusEl.appendChild(p);
+                        });
+                        break;
+                    }
+
+                    case "CRIAR_COR": {
+                        console.log(data.dados);
+                        const res = await fetch("http://localhost:8080/cor/cadastrar", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data.dados) });
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "Cor cadastrada com sucesso!";                        
+                        break;
+                    }
+
+                    case "LISTAR_VEICULOS": {
+                        const res = await fetch(`http://localhost:8080/veiculo`, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const veiculos = await res.json();
+                        console.log(veiculos);
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "";
+
+                        veiculos.forEach(veiculo => {
+                            const p = document.createElement("p");
+                            p.textContent = `${veiculo.id} - ${veiculo.modelo?.marca.nome ?? ""} - ${veiculo.modelo?.nome ?? ""} - ${veiculo.cor?.nome ?? ""} - ${veiculo.tipoVeiculo?.nome ?? ""}`;
+                            statusEl.appendChild(p);
+                        });
+                        break;
+                    }
+
+                    case "CRIAR_VEICULO": {
+                        console.log(data.dados);
+                        const res = await fetch("http://localhost:8080/veiculo/cadastrar", {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data.dados)
+                        });
+
+                        const statusEl = document.getElementById("status");
+                        statusEl.innerHTML = "Veículo cadastrado com sucesso!";
+                        break;
+                    }
+
+                    default:
+                        const statusEl = document.getElementById("status");
+                        statusEl.textContent = data.mensagemPadrao;
+                        break;
+                }
+
+            } catch(err) {
+                console.error(err);
+                document.getElementById("status").textContent = "Erro ao conectar.";
+                document.getElementById("resposta").textContent = err.message;
+            }
+        }
+
+        function renderTabela(arr){
+            if(!arr.length){
+                document.getElementById("resposta").textContent = "Nenhum registro encontrado.";
+                return;
+            }
+            const cols = Object.keys(arr[0]);
+            let html = '<table border="1"><thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+            for(const row of arr){
+                html += '<tr>' + cols.map(c => `<td>${row[c] ?? ''}</td>`).join('') + '</tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('resposta').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
